@@ -1,0 +1,45 @@
+PODS:
+  - Cache (5.1.0)
+  - Kingfisher (4.8.1)
+  - rx-coordinator (0.6.0):
+    - RxCocoa (~> 4.0)
+    - RxSwift (~> 4.0)
+  - RxCocoa (4.2.0):
+    - RxSwift (~> 4.0)
+  - RxSwift (4.2.0)
+  - SwiftyJSON (4.1.0)
+  - UAObfuscatedString (0.5.1)
+
+DEPENDENCIES:
+  - Cache (~> 5.1)
+  - Kingfisher (~> 4.8)
+  - rx-coordinator (~> 0.6)
+  - SwiftyJSON (~> 4.1)
+  - UAObfuscatedString (~> 0.5)
+
+EXTERNAL SOURCES: 
+
+CHECKOUT OPTIONS: 
+
+SPEC CHECKSUMS:
+  Cache: 7737c595aae7d94c7c0feca2c887288624e3b07e
+  Kingfisher: 868c1149679a7ab6869be118faa9b5aed154aaf0
+  rx-coordinator: c58d3e272129410fff5f3382cee89a59f1047882
+  RxCocoa: 0b54909c902e1e581212a03e690bbd94032d8baa
+  RxSwift: 99e10317ddfcc7fbe01356aafd118fde4a0be104
+  SwiftyJSON: c29297daf073d2aa016295d5809cdd68045c39b3
+  UAObfuscatedString: 34850d89100c7aff99129ee56acd433fa5ed3aef
+
+COCOAPODS: 1.5.3
+
+PODFILE CHECKSUM: 0fc9cb6a37bd7695742898a7b7114d2356359c63
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - Cache
+    - Kingfisher
+    - rx-coordinator
+    - RxCocoa
+    - RxSwift
+    - SwiftyJSON
+    - UAObfuscatedString
