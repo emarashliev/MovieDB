@@ -1,5 +1,5 @@
 PODS:
-  - Cache (5.1.0)
+  - Disk (0.3.3)
   - Kingfisher (4.8.1)
   - rx-coordinator (0.6.0):
     - RxCocoa (~> 4.0)
@@ -11,7 +11,7 @@ PODS:
   - UAObfuscatedString (0.5.1)
 
 DEPENDENCIES:
-  - Cache (~> 5.1)
+  - Disk (~> 0.3.3)
   - Kingfisher (~> 4.8)
   - rx-coordinator (~> 0.6)
   - SwiftyJSON (~> 4.1)
@@ -22,7 +22,7 @@ EXTERNAL SOURCES:
 CHECKOUT OPTIONS: 
 
 SPEC CHECKSUMS:
-  Cache: 7737c595aae7d94c7c0feca2c887288624e3b07e
+  Disk: d1f55cd61f6ca20f368232d0c6e37e3c3dfcb63e
   Kingfisher: 868c1149679a7ab6869be118faa9b5aed154aaf0
   rx-coordinator: c58d3e272129410fff5f3382cee89a59f1047882
   RxCocoa: 0b54909c902e1e581212a03e690bbd94032d8baa
@@ -32,11 +32,11 @@ SPEC CHECKSUMS:
 
 COCOAPODS: 1.5.3
 
-PODFILE CHECKSUM: 0fc9cb6a37bd7695742898a7b7114d2356359c63
+PODFILE CHECKSUM: 7002b8f9cb5190df8a86288f662f7c140daf7d52
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
-    - Cache
+    - Disk
     - Kingfisher
     - rx-coordinator
     - RxCocoa
