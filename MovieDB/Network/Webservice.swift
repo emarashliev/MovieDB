@@ -10,6 +10,7 @@ import Foundation
 import UAObfuscatedString
 import SwiftyJSON
 import RxSwift
+import Disk
 
 protocol URLConstructible {
     
@@ -26,8 +27,13 @@ final class Webservice {
         ]
         return url
     }()
-    
+
     func loadPopular(page: UInt = 1, completion: @escaping (_ popular: Popular) -> Void) {
+        if page == 1, let popular = loadPopularMoviesFromCache(popular: Popular()) {
+            completion(popular)
+            return
+        }
+
         let url = Popular.constructURL(baseUrl: self.baseUrl) {
             var url = $0
             let params = [
@@ -64,10 +70,22 @@ final class Webservice {
                     var movies = popular.movies.value
                     movies.append(movie)
                     popular.movies.accept(movies)
+                    //if is first page and it's loaded
+                    if popular.page == 1, popular.movies.value.count == ids.count {
+                        try? Disk.save(movies, to: .caches, as: "movies.json")
+                    }
                 case .error(let error):
                     print(error)
                 }
             })
         }
+    }
+
+    private func loadPopularMoviesFromCache(popular: Popular) -> Popular? {
+        if let movies = try? Disk.retrieve("movies.json", from: .caches, as: [Movie].self) {
+            popular.movies.accept(movies)
+            return popular
+        }
+        return nil
     }
 }

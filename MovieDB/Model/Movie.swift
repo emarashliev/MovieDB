@@ -8,9 +8,9 @@
 
 import Foundation
 
-final class Movie {
+final class Movie: Encodable {
     
-    struct Genre: Decodable {
+    struct Genre: Codable {
         
         var id: UInt
         var name: String
@@ -47,15 +47,15 @@ extension Movie: Decodable {
     convenience init(from decoder: Decoder) throws {
         self.init()
         let values = try decoder.container(keyedBy: CodingKeys.self)
-        title = try values.decode(String?.self, forKey: .title)
-        popularity = try values.decode(Double?.self, forKey: .popularity)
-        posterPath = try values.decode(String?.self, forKey: .posterPath)
-        releaseDate = try values.decode(String?.self, forKey: .releaseDate)
-        overview = try values.decode(String?.self, forKey: .releaseDate)
-        runtime = try values.decode(UInt?.self, forKey: .runtime)
-        revenue = try values.decode(UInt?.self, forKey: .revenue)
-        originalLanguage = try values.decode(String?.self, forKey: .originalLanguage)
-        homepage = try values.decode(String?.self, forKey: .homepage)
+        title = try? values.decode(String.self, forKey: .title)
+        popularity = try? values.decode(Double.self, forKey: .popularity)
+        posterPath = try? values.decode(String.self, forKey: .posterPath)
+        releaseDate = try? values.decode(String.self, forKey: .releaseDate)
+        overview = try? values.decode(String.self, forKey: .releaseDate)
+        runtime = try? values.decode(UInt.self, forKey: .runtime)
+        revenue = try? values.decode(UInt.self, forKey: .revenue)
+        originalLanguage = try? values.decode(String.self, forKey: .originalLanguage)
+        homepage = try? values.decode(String.self, forKey: .homepage)
         genres = try values.decode([Genre?].self, forKey: .genres)
         
     }

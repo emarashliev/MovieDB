@@ -11,7 +11,7 @@ import RxCocoa
 
 final class Popular {
 
-    var page: UInt!
+    var page: UInt = 1
     var movies = BehaviorRelay<[Movie]>(value: [])
 }
 
