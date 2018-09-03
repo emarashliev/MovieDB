@@ -7,50 +7,41 @@
 //
 
 import Foundation
-import SwiftyJSON
+import RxCocoa
 
 final class Popular {
 
-    var page: UInt8 = 1
-    var movies: [Movie] = []
+    var page: UInt!
+    var movies = BehaviorRelay<[Movie]>(value: [])
+}
 
-    private static var baseUrl: URLComponents?
 
-    convenience init(page: UInt8, movies: [Movie]) {
+extension Popular: Decodable {
+
+    private enum CodingKeys: String, CodingKey {
+        case page
+    }
+
+    convenience init(from decoder: Decoder) throws {
         self.init()
-        self.page = page
-        self.movies = movies
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        page = try values.decode(UInt.self, forKey: .page)
+
     }
 }
 
 extension Popular: JSONDataLoadable {
-    static func load(from jsonData: Data) -> Popular {
-        let json = JSON(jsonData)
-        let popular = Popular(page: json.dictionaryValue["page"]!.uInt8Value, movies: [Movie]())
-        let ids = json.dictionaryValue["results"]!.arrayValue.map { $0.dictionaryValue["id"]!.stringValue }
-        for id in ids {
-            let url = Movie.constructURL(baseUrl: self.baseUrl!) {
-                var url = $0
-                url.path.append(contentsOf: id)
-                return url.url
-            }
-            let resource = Resource<Movie>(url: url!)
-            URLSession.shared.load(resource, completion: { result in
-                switch result {
-                case .success(let movie):
-                    popular.movies.append(movie)
-                case .error(let error):
-                    print(error)
-                }
-            })
-        }
+
+    static func load(from data: Data) -> Popular {
+        let jsonDecoder = JSONDecoder()
+        let popular = try! jsonDecoder.decode(Popular.self, from: data)
         return popular
     }
 }
 
 extension Popular: URLConstructible {
+    
     static func constructURL(baseUrl: URLComponents, construct: (URLComponents) -> URL?) -> URL? {
-        self.baseUrl = baseUrl
         var url = baseUrl
         url.path.append(contentsOf: "movie/popular")
         return construct(url)

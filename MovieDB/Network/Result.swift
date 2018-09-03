@@ -7,14 +7,16 @@
 //
 
 import Foundation
+import SwiftyJSON
 
 enum Result<T> {
+    
     case error(Error)
-    case success(T)
+    case success(T, JSON)
 
-    init(_ value: T?, error: @autoclosure () -> Error) {
-        if let x = value {
-            self = .success(x)
+    init(_ value: T?, json: JSON?, error: @autoclosure () -> Error) {
+        if let v = value, let j = json {
+            self = .success(v, j)
         } else {
             self = .error(error())
         }

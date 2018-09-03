@@ -9,8 +9,10 @@
 import Foundation
 import UAObfuscatedString
 import SwiftyJSON
+import RxSwift
 
 protocol URLConstructible {
+    
     static func constructURL(baseUrl: URLComponents, construct: (_ constructedUrl: URLComponents) -> URL?) -> URL?
 }
 
@@ -25,7 +27,7 @@ final class Webservice {
         return url
     }()
     
-    func loadPopular(page: UInt8 = 1) {
+    func loadPopular(page: UInt = 1, completion: @escaping (_ popular: Popular) -> Void) {
         let url = Popular.constructURL(baseUrl: self.baseUrl) {
             var url = $0
             let params = [
@@ -38,14 +40,34 @@ final class Webservice {
         let resource = Resource<Popular>(url: url!)
         URLSession.shared.load(resource, completion: { result in
             switch result {
-            case .success(let popular):
-                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 10, execute: {
-                    print(popular.movies)
-                })
-                print(popular.movies)
+            case .success(let popular, let json):
+                self.loadPopularMovies(popular: popular, json: json)
+                completion(popular)
             case .error(let error):
                 print(error)
             }
         })
+    }
+
+    private func loadPopularMovies(popular: Popular, json: JSON) {
+        let ids = json.dictionaryValue["results"]!.arrayValue.map { $0.dictionaryValue["id"]!.stringValue }
+        for id in ids {
+            let url = Movie.constructURL(baseUrl: self.baseUrl) {
+                var url = $0
+                url.path.append(contentsOf: id)
+                return url.url
+            }
+            let resource = Resource<Movie>(url: url!)
+            URLSession.shared.load(resource, completion: { result in
+                switch result {
+                case .success(let movie, _):
+                    var movies = popular.movies.value
+                    movies.append(movie)
+                    popular.movies.accept(movies)
+                case .error(let error):
+                    print(error)
+                }
+            })
+        }
     }
 }

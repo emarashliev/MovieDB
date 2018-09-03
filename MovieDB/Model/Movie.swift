@@ -9,13 +9,13 @@
 import Foundation
 
 final class Movie {
-
+    
     struct Genre: Decodable {
-
+        
         var id: UInt
         var name: String
     }
-
+    
     var title: String?
     var popularity: Double?
     var posterPath: String?
@@ -29,12 +29,12 @@ final class Movie {
 }
 
 extension Movie: Decodable {
-
-    enum CodingKeys: String, CodingKey {
+    
+    private enum CodingKeys: String, CodingKey {
         case posterPath = "poster_path"
         case releaseDate = "release_date"
         case originalLanguage = "original_language"
-
+        
         case title
         case popularity
         case overview
@@ -43,7 +43,7 @@ extension Movie: Decodable {
         case runtime
         case homepage
     }
-
+    
     convenience init(from decoder: Decoder) throws {
         self.init()
         let values = try decoder.container(keyedBy: CodingKeys.self)
@@ -57,24 +57,26 @@ extension Movie: Decodable {
         originalLanguage = try values.decode(String?.self, forKey: .originalLanguage)
         homepage = try values.decode(String?.self, forKey: .homepage)
         genres = try values.decode([Genre?].self, forKey: .genres)
-
+        
     }
 }
 
 extension Movie: JSONDataLoadable {
-    static func load(from jsonData: Data) -> Movie {
+    
+    static func load(from data: Data) -> Movie {
         let jsonDecoder = JSONDecoder()
-        let movie = try! jsonDecoder.decode(Movie.self, from: jsonData)
+        let movie = try! jsonDecoder.decode(Movie.self, from: data)
         return movie
     }
 }
 
 extension Movie: URLConstructible {
+    
     static func constructURL(baseUrl: URLComponents, construct: (_ constructedUrl: URLComponents) -> URL?) -> URL? {
         var url = baseUrl
         url.path.append(contentsOf: "movie/")
         return construct(url)
     }
-
-
+    
+    
 }

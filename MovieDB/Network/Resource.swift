@@ -7,12 +7,15 @@
 //
 
 import Foundation
+import SwiftyJSON
 
 protocol JSONDataLoadable {
-    static func load(from jsonData: Data) -> Self
+
+    static func load(from data: Data) -> Self
 }
 
 struct Resource<T> {
+
     let url: URL
     let parseResult: (Data) -> Result<T>
 
@@ -23,15 +26,17 @@ struct Resource<T> {
 }
 
 extension Resource where T: JSONDataLoadable {
+
     init(url: URL) {
         self.url = url
         self.parseResult = { data in
-            return .success(T.load(from: data))
+            return .success(T.load(from: data), JSON(data))
         }
     }
 }
 
 extension URLSession {
+    
     @discardableResult
     func load<T>(_ resource: Resource<T>, completion: @escaping (Result<T>) -> ()) -> URLSessionDataTask {
         let task = dataTask(with: resource.request) { (data, _, error) in
