@@ -39,7 +39,6 @@ extension NibIdentifiable where Self: UIViewController {
     static func instantiateFromNib() -> Self {
         return Self(nibName: nibIdentifier, bundle: nil)
     }
-    
 }
 
 extension NibIdentifiable where Self: UIView {
@@ -50,5 +49,11 @@ extension NibIdentifiable where Self: UIView {
         }
         return view
     }
-    
+}
+
+extension UICollectionView {
+
+    func registerCell<T: UICollectionViewCell>(type: T.Type) {
+        register(type.nib, forCellWithReuseIdentifier: String(describing: T.self))
+    }
 }
