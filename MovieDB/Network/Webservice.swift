@@ -21,6 +21,7 @@ final class Webservice {
 
     static let imagesBaseUrl = URLComponents(string: "https://image.tmdb.org/t/p/w500/")!
 
+    private let popularMoviesCacheFolder = "popularMovies"
     private lazy var baseUrl: URLComponents = {
         var url = URLComponents(string: "https://api.themoviedb.org/3/")!
         url.queryItems = [
@@ -62,6 +63,10 @@ final class Webservice {
         })
     }
 
+    func deleteCache()  {
+       try? Disk.remove(popularMoviesCacheFolder, from: .caches)
+    }
+
     private func loadMovies(popular: Popular, json: JSON) {
         let ids = json.dictionaryValue["results"]?.arrayValue.map { $0.dictionaryValue["id"]?.uIntValue } ?? []
         for id in ids {
@@ -77,7 +82,8 @@ final class Webservice {
                     popular.moviesPublishSubject.on(.next(movie))
                     popular.movies.append(movie)
                     if movie.id == ids.last {
-                        try? Disk.save(popular.movies, to: .caches, as: "popularMovies/\(popular.page).json")
+                        try? Disk.save(popular.movies, to: .caches,
+                                       as: "\(self.popularMoviesCacheFolder)/\(popular.page).json")
                         popular.moviesPublishSubject.on(.completed)
                     }
                 case .error(let error):
@@ -88,6 +94,6 @@ final class Webservice {
     }
 
     private func loadCachedMovies(for page: UInt) -> [Movie]? {
-        return try? Disk.retrieve("popularMovies/\(page).json", from: .caches, as: [Movie].self)
+        return try? Disk.retrieve("\(popularMoviesCacheFolder)/\(page).json", from: .caches, as: [Movie].self)
     }
 }

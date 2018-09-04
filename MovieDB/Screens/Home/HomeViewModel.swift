@@ -52,4 +52,11 @@ final class HomeViewModel {
             }
         }
     }
+
+    func refresh() {
+        webservice.deleteCache()
+        self.movies.accept([])
+        lastLoadedPage = 0
+        fetchNextPage()
+    }
 }

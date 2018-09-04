@@ -25,6 +25,9 @@ class HomeViewController: UIViewController, BindableType {
         collectionView.registerCell(type: HomeCollectionViewCell.self)
         collectionView.rx.setDelegate(self)
             .disposed(by: disposeBag)
+
+        let button = UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(refreshPressed))
+        navigationItem.rightBarButtonItem = button
     }
 
     func bindViewModel() {
@@ -39,6 +42,12 @@ class HomeViewController: UIViewController, BindableType {
                 cell.year.text = movie.releaseYear
             }
             .disposed(by: disposeBag)
+    }
+
+    @objc
+    func refreshPressed() {
+        collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: false)
+        viewModel.refresh()
     }
 }
 
