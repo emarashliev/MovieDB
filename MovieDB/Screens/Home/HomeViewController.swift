@@ -11,17 +11,17 @@ import RxSwift
 import RxCocoa
 import Kingfisher
 
-class HomeViewController: UIViewController, UICollectionViewDelegateFlowLayout, BindableType {
+class HomeViewController: UIViewController, BindableType {
 
     @IBOutlet weak var collectionView: UICollectionView!
     
     var viewModel: HomeViewModel!
-
+    var prefetchedIndexPaths = [IndexPath]()
     private let disposeBag = DisposeBag()
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         collectionView.registerCell(type: HomeCollectionViewCell.self)
         collectionView.rx.setDelegate(self)
             .disposed(by: disposeBag)
@@ -36,7 +36,7 @@ class HomeViewController: UIViewController, UICollectionViewDelegateFlowLayout, 
                 cell.poster.kf.setImage(with: url)
 
                 cell.title.text = movie.title
-                cell.genres.text = movie.genres.compactMap { $0?.name }.joined(separator: ", ")
+                cell.genres.text = movie.genres.compactMap { $0.name }.joined(separator: ", ")
                 cell.score.text = String(format: "%.3f", movie.popularity!) + " popularity score"
                 let formatter = DateFormatter()
                 formatter.dateFormat = "YYYY"
@@ -45,10 +45,10 @@ class HomeViewController: UIViewController, UICollectionViewDelegateFlowLayout, 
                 cell.year.text =  formatter.string(from: parser.date(from: movie.releaseDate!)!) + " year"
             }
             .disposed(by: disposeBag)
-
     }
+}
 
-
+extension HomeViewController: UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
@@ -63,5 +63,16 @@ class HomeViewController: UIViewController, UICollectionViewDelegateFlowLayout, 
         let itemSize = floor((UIScreen.main.bounds.width - ((numberOfColumns - 1) *  minimumInteritemSpacing)) /
             numberOfColumns)
         return CGSize(width: itemSize, height: itemSize * 1.5)
+    }
+}
+
+extension HomeViewController: UICollectionViewDelegate {
+
+    func collectionView(_ collectionView: UICollectionView,
+                        willDisplay cell: UICollectionViewCell,
+                        forItemAt indexPath: IndexPath) {
+        if indexPath.item  == viewModel.movies.value.count  - 1 {
+            viewModel.fetchNextPage()
+        }
     }
 }
