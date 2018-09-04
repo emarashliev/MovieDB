@@ -11,9 +11,9 @@ import RxSwift
 import RxCocoa
 import RxCoordinator
 
-class HomeViewModel {
+final class HomeViewModel {
     
-    var movies = BehaviorRelay<[Movie]>(value: [])
+    var movies = BehaviorRelay<[MovieDataTransformHelper]>(value: [])
     private var lastLoadedPage: UInt
     private var pageInProgress = false
     
@@ -37,7 +37,7 @@ class HomeViewModel {
             self.webservice.loadPopular(page: self.lastLoadedPage + 1) { popular in
                 popular.moviesPublishSubject.subscribe(onNext: { movie in
                     var movies = self.movies.value
-                    movies.append(movie)
+                    movies.append(MovieDataTransformHelper(movie: movie))
                     self.movies.accept(movies)
                 }, onError: { error in
                     self.pageInProgress = false

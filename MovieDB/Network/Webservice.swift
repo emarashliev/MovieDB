@@ -19,6 +19,8 @@ protocol URLConstructible {
 
 final class Webservice {
 
+    static let imagesBaseUrl = URLComponents(string: "https://image.tmdb.org/t/p/w500/")!
+
     private lazy var baseUrl: URLComponents = {
         var url = URLComponents(string: "https://api.themoviedb.org/3/")!
         url.queryItems = [

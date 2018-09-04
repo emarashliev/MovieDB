@@ -32,17 +32,11 @@ class HomeViewController: UIViewController, BindableType {
         let cellType = HomeCollectionViewCell.self
         viewModel.movies
             .bind(to: collectionView.rx.items(cellIdentifier: nibId, cellType: cellType)) { (_, movie, cell) in
-                let url = URL(string: "https://image.tmdb.org/t/p/w500/\(movie.posterPath!)")
-                cell.poster.kf.setImage(with: url)
-
+                cell.poster.kf.setImage(with: movie.posterUrl)
                 cell.title.text = movie.title
-                cell.genres.text = movie.genres.compactMap { $0.name }.joined(separator: ", ")
-                cell.score.text = String(format: "%.3f", movie.popularity!) + " popularity score"
-                let formatter = DateFormatter()
-                formatter.dateFormat = "YYYY"
-                let parser = DateFormatter()
-                parser.dateFormat = "YYYY-MM-DD"
-                cell.year.text =  formatter.string(from: parser.date(from: movie.releaseDate!)!) + " year"
+                cell.genres.text = movie.genres
+                cell.score.text = movie.popularity
+                cell.year.text = movie.releaseYear
             }
             .disposed(by: disposeBag)
     }
