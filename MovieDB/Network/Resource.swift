@@ -14,6 +14,10 @@ protocol JSONDataLoadable {
     static func load(from data: Data) -> Self
 }
 
+struct APIError: Error {
+    var localizedDescription: String
+}
+
 struct Resource<T> {
 
     let url: URL
@@ -39,11 +43,16 @@ extension URLSession {
     
     @discardableResult
     func load<T>(_ resource: Resource<T>, completion: @escaping (Result<T>) -> ()) -> URLSessionDataTask {
-        let task = dataTask(with: resource.request) { (data, _, error) in
-            if let e = error {
+        let task = dataTask(with: resource.request) { (data, response, error) in
+            if let r = response as? HTTPURLResponse, let d = data, 200 ..< 305 ~= r.statusCode {
+                completion(resource.parseResult(d))
+            } else if let e = error {
                 completion(.error(e))
             } else if let d = data {
-                completion(resource.parseResult(d))
+                let j = JSON(d)
+                let e = APIError(localizedDescription: j["status_message"].stringValue)
+                completion(.error(e))
+
             }
         }
         task.resume()
