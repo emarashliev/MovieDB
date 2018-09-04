@@ -29,8 +29,14 @@ final class Webservice {
     }()
 
     func loadPopular(page: UInt = 1, completion: @escaping (_ popular: Popular) -> Void) {
-        if page == 1, let popular = loadPopularMoviesFromCache(popular: Popular()) {
+        if let movies = loadCachedMovies(for: page) {
+            let popular = Popular(page: page)
             completion(popular)
+            popular.movies = movies
+            for movie in movies {
+                popular.moviesPublishSubject.on(.next(movie))
+            }
+            popular.moviesPublishSubject.on(.completed)
             return
         }
 
@@ -47,45 +53,39 @@ final class Webservice {
         URLSession.shared.load(resource, completion: { result in
             switch result {
             case .success(let popular, let json):
-                self.loadPopularMovies(popular: popular, json: json)
+                self.loadMovies(popular: popular, json: json)
                 completion(popular)
             case .error(let error):
-                print(error)
-            }
+                print(error)            }
         })
     }
 
-    private func loadPopularMovies(popular: Popular, json: JSON) {
-        let ids = json.dictionaryValue["results"]!.arrayValue.map { $0.dictionaryValue["id"]!.stringValue }
+    private func loadMovies(popular: Popular, json: JSON) {
+        let ids = json.dictionaryValue["results"]?.arrayValue.map { $0.dictionaryValue["id"]?.uIntValue } ?? []
         for id in ids {
             let url = Movie.constructURL(baseUrl: self.baseUrl) {
                 var url = $0
-                url.path.append(contentsOf: id)
+                url.path.append(contentsOf: "\(id!)")
                 return url.url
             }
             let resource = Resource<Movie>(url: url!)
             URLSession.shared.load(resource, completion: { result in
                 switch result {
                 case .success(let movie, _):
-                    var movies = popular.movies.value
-                    movies.append(movie)
-                    popular.movies.accept(movies)
-                    //if is first page and it's loaded
-                    if popular.page == 1, popular.movies.value.count == ids.count {
-                        try? Disk.save(movies, to: .caches, as: "movies.json")
+                    popular.moviesPublishSubject.on(.next(movie))
+                    popular.movies.append(movie)
+                    if movie.id == ids.last {
+                        try? Disk.save(popular.movies, to: .caches, as: "popularMovies/\(popular.page).json")
+                        popular.moviesPublishSubject.on(.completed)
                     }
                 case .error(let error):
-                    print(error)
+                    popular.moviesPublishSubject.on(.error(error))
                 }
             })
         }
     }
 
-    private func loadPopularMoviesFromCache(popular: Popular) -> Popular? {
-        if let movies = try? Disk.retrieve("movies.json", from: .caches, as: [Movie].self) {
-            popular.movies.accept(movies)
-            return popular
-        }
-        return nil
+    private func loadCachedMovies(for page: UInt) -> [Movie]? {
+        return try? Disk.retrieve("popularMovies/\(page).json", from: .caches, as: [Movie].self)
     }
 }

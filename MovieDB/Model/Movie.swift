@@ -15,12 +15,13 @@ final class Movie: Encodable {
         var id: UInt
         var name: String
     }
-    
+
+    var id: UInt?
     var title: String?
     var popularity: Double?
     var posterPath: String?
     var releaseDate: String?
-    var genres: [Genre?] = []
+    var genres: [Genre] = []
     var overview: String?
     var runtime: UInt?
     var revenue: UInt?
@@ -34,7 +35,8 @@ extension Movie: Decodable {
         case posterPath = "poster_path"
         case releaseDate = "release_date"
         case originalLanguage = "original_language"
-        
+
+        case id
         case title
         case popularity
         case overview
@@ -47,6 +49,7 @@ extension Movie: Decodable {
     convenience init(from decoder: Decoder) throws {
         self.init()
         let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try? values.decode(UInt.self, forKey: .id)
         title = try? values.decode(String.self, forKey: .title)
         popularity = try? values.decode(Double.self, forKey: .popularity)
         posterPath = try? values.decode(String.self, forKey: .posterPath)
@@ -56,7 +59,7 @@ extension Movie: Decodable {
         revenue = try? values.decode(UInt.self, forKey: .revenue)
         originalLanguage = try? values.decode(String.self, forKey: .originalLanguage)
         homepage = try? values.decode(String.self, forKey: .homepage)
-        genres = try values.decode([Genre?].self, forKey: .genres)
+        genres = (try? values.decode([Genre].self, forKey: .genres)) ?? []
         
     }
 }

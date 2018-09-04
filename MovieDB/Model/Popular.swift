@@ -7,12 +7,18 @@
 //
 
 import Foundation
+import RxSwift
 import RxCocoa
 
 final class Popular {
 
-    var page: UInt = 1
-    var movies = BehaviorRelay<[Movie]>(value: [])
+    var page: UInt
+    var moviesPublishSubject = PublishSubject<Movie>()
+    var movies = [Movie]()
+
+    init(page: UInt) {
+        self.page = page
+    }
 }
 
 
@@ -23,7 +29,7 @@ extension Popular: Decodable {
     }
 
     convenience init(from decoder: Decoder) throws {
-        self.init()
+        self.init(page: 1)
         let values = try decoder.container(keyedBy: CodingKeys.self)
         page = try values.decode(UInt.self, forKey: .page)
 
