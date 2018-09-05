@@ -59,3 +59,18 @@ extension URLSession {
         return task
     }
 }
+
+extension Array: JSONDataLoadable where Element == Movie {
+    static func load(from data: Data) -> Array<Element> {
+        let json = JSON(data)
+        var movies = [Movie]()
+        for m in json["results"].arrayValue {
+            if let d = try? m.rawData() {
+                let movie = Movie.load(from: d)
+                movies.append(movie)
+            }
+        }
+        return movies
+    }
+}
+

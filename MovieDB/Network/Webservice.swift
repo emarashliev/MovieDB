@@ -59,7 +59,25 @@ final class Webservice {
                 self.loadMovies(popular: popular, json: json)
                 completion(popular)
             case .error(let error):
-                print(error)            }
+                print(error)
+
+            }
+        })
+    }
+
+    func search(query: String, completion: @escaping (_ movies: [Movie]) -> Void) {
+        var url = baseUrl
+        url.path.append(contentsOf: "search/movie")
+        url.queryItems?.append(contentsOf: [URLQueryItem(name: "query", value: query)])
+
+        let resource = Resource<[Movie]>(url: url.url!)
+        URLSession.shared.load(resource, completion: { result in
+            switch result {
+            case .success(let movies, _):
+                completion(movies)
+            case .error(let error):
+                print(error)
+            }
         })
     }
 
@@ -82,7 +100,8 @@ final class Webservice {
                     popular.moviesPublishSubject.on(.next(movie))
                     popular.movies.append(movie)
                     if movie.id == ids.last {
-                        try? Disk.save(popular.movies, to: .caches,
+                        try? Disk.save(popular.movies,
+                                       to: .caches,
                                        as: "\(self.popularMoviesCacheFolder)/\(popular.page).json")
                         popular.moviesPublishSubject.on(.completed)
                     }

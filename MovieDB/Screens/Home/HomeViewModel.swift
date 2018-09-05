@@ -15,7 +15,7 @@ final class HomeViewModel {
     
     var movies = BehaviorRelay<[MovieDataTransformHelper]>(value: [])
     private var lastLoadedPage: UInt
-    private var pageInProgress = false
+    private var inProgress = false
     
     private let coordinator: AnyCoordinator<MainRoute>
     private let webservice = Webservice()
@@ -28,23 +28,23 @@ final class HomeViewModel {
     }
     
     func fetchNextPage()  {
-        guard !pageInProgress else {
+        guard !inProgress else {
             return
         }
         
-        pageInProgress = true
-        DispatchQueue.global(qos: .userInitiated).async {
+        inProgress = true
+        DispatchQueue.global(qos: .userInteractive).async {
             self.webservice.loadPopular(page: self.lastLoadedPage + 1) { popular in
                 popular.moviesPublishSubject.subscribe(onNext: { movie in
                     var movies = self.movies.value
                     movies.append(MovieDataTransformHelper(movie: movie))
                     self.movies.accept(movies)
                 }, onError: { error in
-                    self.pageInProgress = false
+                    self.inProgress = false
                     print(error)
                 }, onCompleted: {
                     self.lastLoadedPage = popular.page
-                    self.pageInProgress = false
+                    self.inProgress = false
                 })
                     .disposed(by: self.disposeBag)
                 
@@ -53,10 +53,26 @@ final class HomeViewModel {
         }
     }
 
-    func refresh() {
-        webservice.deleteCache()
+    func search(forMovies query: String)  {
+        inProgress = true
+        webservice.search(query: query) { m in
+            let movies = m.sorted(by: {
+                guard let popularity0 = $0.popularity, let popularity1 = $1.popularity else { return false }
+                return popularity0 > popularity1
+            })
+            self.movies.accept(movies.map { MovieDataTransformHelper(movie: $0) })
+        }
+    }
+
+    func reset() {
         self.movies.accept([])
         lastLoadedPage = 0
+        inProgress = false
         fetchNextPage()
+    }
+
+    func refresh() {
+        webservice.deleteCache()
+        reset()
     }
 }

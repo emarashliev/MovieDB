@@ -14,9 +14,8 @@ import Kingfisher
 class HomeViewController: UIViewController, BindableType {
 
     @IBOutlet weak var collectionView: UICollectionView!
-    
+
     var viewModel: HomeViewModel!
-    var prefetchedIndexPaths = [IndexPath]()
     private let disposeBag = DisposeBag()
 
     override func viewDidLoad() {
@@ -30,6 +29,32 @@ class HomeViewController: UIViewController, BindableType {
         navigationItem.rightBarButtonItem = button
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        navigationController?.navigationBar.prefersLargeTitles = true
+        let searchController = UISearchController(searchResultsController: nil)
+        searchController.obscuresBackgroundDuringPresentation = false
+        navigationItem.searchController = searchController
+
+        searchController.searchBar.rx.value
+            .throttle(1, scheduler: MainScheduler.instance)
+            .distinctUntilChanged()
+            .subscribe(onNext: { text in
+                if text?.count == 0 {
+                    self.viewModel.reset()
+                } else {
+                    self.viewModel.search(forMovies: text!)
+                }
+            } )
+            .disposed(by: disposeBag)
+
+        searchController.searchBar.rx.textDidEndEditing.subscribe(onNext: { (_) in
+            self.viewModel.reset()
+        })
+            .disposed(by: disposeBag)
+    }
+    
     func bindViewModel() {
         let nibId = HomeCollectionViewCell.nibIdentifier
         let cellType = HomeCollectionViewCell.self
@@ -46,7 +71,6 @@ class HomeViewController: UIViewController, BindableType {
 
     @objc
     func refreshPressed() {
-        collectionView.scrollToItem(at: IndexPath(row: 0, section: 0), at: .top, animated: false)
         viewModel.refresh()
     }
 }
