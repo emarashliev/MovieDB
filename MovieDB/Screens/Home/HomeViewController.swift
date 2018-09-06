@@ -46,17 +46,25 @@ class HomeViewController: UIViewController, BindableType {
             .skip(1)
             .throttle(0.5, scheduler: MainScheduler.instance)
             .distinctUntilChanged()
-            .subscribe(onNext: { text in
+            .subscribe(onNext: { [weak self] text in
+                guard let strongSelf = self else {
+                    return
+                }
+
                 if text?.count == 0 {
-                    self.viewModel.reset()
+                    strongSelf.viewModel.reset()
                 } else {
-                    self.viewModel.search(forMovies: text!)
+                    strongSelf.viewModel.search(forMovies: text!)
                 }
             } )
             .disposed(by: disposeBag)
 
-        searchController.searchBar.rx.textDidEndEditing.subscribe(onNext: {
-            self.viewModel.reset()
+        searchController.searchBar.rx.textDidEndEditing.subscribe(onNext: { [weak self] in
+            guard let strongSelf = self else {
+                return
+            }
+
+            strongSelf.viewModel.reset()
         })
             .disposed(by: disposeBag)
         executedOnce = true
@@ -90,8 +98,12 @@ class HomeViewController: UIViewController, BindableType {
             .disposed(by: disposeBag)
 
         collectionView.rx.itemSelected
-            .subscribe(onNext: { indexPath in
-                self.viewModel.showDetails(for: indexPath.item)
+            .subscribe(onNext: { [weak self] indexPath in
+                guard let strongSelf = self else {
+                    return
+                }
+
+                strongSelf.viewModel.showDetails(for: indexPath.item)
             } )
             .disposed(by: disposeBag)
     }

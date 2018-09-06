@@ -48,15 +48,18 @@ final class Webservice {
         url.path.append(contentsOf: "movie/popular")
         let resource = Resource<Popular>(url: url.url!)
         
-        URLSession.shared.load(resource, completion: { result in
+        URLSession.shared.load(resource, completion: { [weak self] result in
+            guard let strongSelf = self else {
+                return
+            }
             switch result {
             case .success(let popular):
-                self.loadGenres(completion: { genres in
+                strongSelf.loadGenres(completion: { genres in
                     completion(popular, genres)
                 })
                 try? Disk.save(popular.movies,
                                to: .caches,
-                               as: "\(self.popularMoviesCacheFolder)/\(popular.page).json")
+                               as: "\(strongSelf.popularMoviesCacheFolder)/\(popular.page).json")
             case .error(let error):
                 print(error)
 
@@ -85,10 +88,13 @@ final class Webservice {
         url.queryItems?.append(contentsOf: [URLQueryItem(name: "query", value: query)])
         let resource = Resource<[Movie]>(url: url.url!)
 
-        URLSession.shared.load(resource, completion: { result in
+        URLSession.shared.load(resource, completion: { [weak self] result in
+            guard let strongSelf = self else {
+                return
+            }
             switch result {
             case .success(let movies):
-                self.loadGenres(completion: { genres in
+                strongSelf.loadGenres(completion: { genres in
                     completion(movies, genres)
                 })
             case .error(let error):

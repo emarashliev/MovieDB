@@ -30,8 +30,12 @@ final class DetailsViewModel {
     // MARK: - Actions
     
     func fetchDetails() {
-        webservice.loadMovieDetails(movie: movie.value.movie) { detailedMovie in
-            self.movie.accept(MovieDataTransformHelper(movie: detailedMovie, genres: self.movie.value.genres ))
+        webservice.loadMovieDetails(movie: movie.value.movie) { [weak self] detailedMovie in
+            guard let strongSelf = self else {
+                return
+            }
+            strongSelf.movie.accept(MovieDataTransformHelper(movie: detailedMovie,
+                                                             genres: strongSelf.movie.value.genres))
         }
     }
 }

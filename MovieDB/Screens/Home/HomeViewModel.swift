@@ -38,24 +38,31 @@ final class HomeViewModel {
         }
 
         inProgress = true
-        DispatchQueue.global(qos: .userInteractive).async {
-            self.webservice.loadPopular(page: self.lastLoadedPage + 1) { popular, genres in
+        DispatchQueue.global(qos: .userInteractive).async { [weak self] in
+            guard let strongSelf = self else {
+                return
+            }
+            strongSelf.webservice.loadPopular(page: strongSelf.lastLoadedPage + 1) { popular, genres in
                 let movies = popular.movies.map { MovieDataTransformHelper(movie: $0, genres: genres) }
-                self.movies.accept(self.movies.value + movies)
-                self.lastLoadedPage = popular.page
-                self.inProgress = false
+                strongSelf.movies.accept(strongSelf.movies.value + movies)
+                strongSelf.lastLoadedPage = popular.page
+                strongSelf.inProgress = false
             }
         }
     }
     
     func search(forMovies query: String)  {
         inProgress = true
-        webservice.search(query: query) { m, genres in
+        webservice.search(query: query) { [weak self] m, genres in
+            guard let strongSelf = self else {
+                return
+            }
+
             let movies = m.sorted(by: {
                 guard let popularity0 = $0.popularity, let popularity1 = $1.popularity else { return false }
                 return popularity0 > popularity1
             })
-            self.movies.accept(movies.map { MovieDataTransformHelper(movie: $0, genres: genres) })
+            strongSelf.movies.accept(movies.map { MovieDataTransformHelper(movie: $0, genres: genres) })
         }
     }
     

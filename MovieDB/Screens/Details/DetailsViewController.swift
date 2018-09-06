@@ -51,17 +51,21 @@ class DetailsViewController: UIViewController, BindableType {
     func bindViewModel() {
         viewModel.movie
             .observeOn(MainScheduler.instance)
-            .bind { movie in
-                self.title = movie.title
-                self.image.kf.setImage(with: movie.posterUrl)
-                self.genres.text = movie.genresString
-                self.desc.text = movie.overview
-                self.score.text = movie.popularity
-                self.year.text = movie.releaseYear
-                self.runtime.text = movie.runtime
-                self.revenue.text = movie.revenue
-                self.language.text = movie.language
-                self.link.attributedText = movie.homepage
+            .bind { [weak self] movie in
+                guard let strongSelf = self else {
+                    return
+                }
+                
+                strongSelf.title = movie.title
+                strongSelf.image.kf.setImage(with: movie.posterUrl)
+                strongSelf.genres.text = movie.genresString
+                strongSelf.desc.text = movie.overview
+                strongSelf.score.text = movie.popularity
+                strongSelf.year.text = movie.releaseYear
+                strongSelf.runtime.text = movie.runtime
+                strongSelf.revenue.text = movie.revenue
+                strongSelf.language.text = movie.language
+                strongSelf.link.attributedText = movie.homepage
             }
             .disposed(by: disposeBag)
     }
