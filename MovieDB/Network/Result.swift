@@ -12,11 +12,11 @@ import SwiftyJSON
 enum Result<T> {
     
     case error(Error)
-    case success(T, JSON)
+    case success(T)
 
-    init(_ value: T?, json: JSON?, error: @autoclosure () -> Error) {
-        if let v = value, let j = json {
-            self = .success(v, j)
+    init(_ value: T?, error: @autoclosure () -> Error) {
+        if let v = value {
+            self = .success(v)
         } else {
             self = .error(error())
         }

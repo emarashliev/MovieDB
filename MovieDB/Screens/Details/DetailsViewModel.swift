@@ -7,16 +7,31 @@
 //
 
 import Foundation
+import RxSwift
+import RxCocoa
 import RxCoordinator
 
 final class DetailsViewModel {
 
-    private let coordinator: AnyCoordinator<MainRoute>
-    let movie: MovieDataTransformHelper
+    let movie: BehaviorRelay<MovieDataTransformHelper>
 
+    // MARK: - Private
+    
+    private let webservice = Webservice()
+    private let coordinator: AnyCoordinator<MainRoute>
+
+    // MARK: - Init
+    
     init(coodinator: AnyCoordinator<MainRoute>, movie: MovieDataTransformHelper) {
         self.coordinator = coodinator
-        self.movie = movie
+        self.movie = BehaviorRelay(value: movie)
     }
+
+    // MARK: - Actions
     
+    func fetchDetails() {
+        webservice.loadMovieDetails(movie: movie.value.movie) { detailedMovie in
+            self.movie.accept(MovieDataTransformHelper(movie: detailedMovie, genres: self.movie.value.genres ))
+        }
+    }
 }

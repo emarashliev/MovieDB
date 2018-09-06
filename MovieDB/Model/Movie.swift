@@ -9,19 +9,13 @@
 import Foundation
 
 final class Movie: Encodable {
-    
-    struct Genre: Codable {
-        
-        var id: UInt
-        var name: String
-    }
 
     var id: UInt?
     var title: String?
     var popularity: Double?
     var posterPath: String?
     var releaseDate: String?
-    var genres: [Genre] = []
+    var genreIds: [UInt] = []
     var overview: String?
     var runtime: UInt?
     var revenue: UInt?
@@ -35,12 +29,12 @@ extension Movie: Decodable {
         case posterPath = "poster_path"
         case releaseDate = "release_date"
         case originalLanguage = "original_language"
+        case genreIds = "genre_ids"
 
         case id
         case title
         case popularity
         case overview
-        case genres
         case revenue
         case runtime
         case homepage
@@ -59,8 +53,7 @@ extension Movie: Decodable {
         revenue = try? values.decode(UInt.self, forKey: .revenue)
         originalLanguage = try? values.decode(String.self, forKey: .originalLanguage)
         homepage = try? values.decode(String.self, forKey: .homepage)
-        genres = (try? values.decode([Genre].self, forKey: .genres)) ?? []
-        
+        genreIds = (try? values.decode([UInt].self, forKey: .genreIds)) ?? []
     }
 }
 
@@ -71,15 +64,4 @@ extension Movie: JSONDataLoadable {
         let movie = try! jsonDecoder.decode(Movie.self, from: data)
         return movie
     }
-}
-
-extension Movie: URLConstructible {
-    
-    static func constructURL(baseUrl: URLComponents, construct: (_ constructedUrl: URLComponents) -> URL?) -> URL? {
-        var url = baseUrl
-        url.path.append(contentsOf: "movie/")
-        return construct(url)
-    }
-    
-    
 }

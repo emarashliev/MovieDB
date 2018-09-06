@@ -7,13 +7,11 @@
 //
 
 import Foundation
-import RxSwift
-import RxCocoa
+import SwiftyJSON
 
 final class Popular {
 
     var page: UInt
-    var moviesPublishSubject = PublishSubject<Movie>()
     var movies = [Movie]()
 
     init(page: UInt) {
@@ -41,15 +39,12 @@ extension Popular: JSONDataLoadable {
     static func load(from data: Data) -> Popular {
         let jsonDecoder = JSONDecoder()
         let popular = try! jsonDecoder.decode(Popular.self, from: data)
+        if let json = try? JSON(data: data) {
+            for m in json["results"].arrayValue {
+                let movie = Movie.load(from: try! m.rawData())
+                popular.movies.append(movie)
+            }
+        }
         return popular
-    }
-}
-
-extension Popular: URLConstructible {
-    
-    static func constructURL(baseUrl: URLComponents, construct: (URLComponents) -> URL?) -> URL? {
-        var url = baseUrl
-        url.path.append(contentsOf: "movie/popular")
-        return construct(url)
     }
 }

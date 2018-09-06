@@ -41,16 +41,6 @@ extension NibIdentifiable where Self: UIViewController {
     }
 }
 
-extension NibIdentifiable where Self: UIView {
-    
-    static func instantiateFromNib() -> Self {
-        guard let view = UINib(nibName: nibIdentifier, bundle: nil).instantiate(withOwner: nil, options: nil).first as? Self else {
-            fatalError("Couldn't find nib file for \(String(describing: Self.self))")
-        }
-        return view
-    }
-}
-
 extension UICollectionView {
 
     func registerCell<T: UICollectionViewCell>(type: T.Type) {

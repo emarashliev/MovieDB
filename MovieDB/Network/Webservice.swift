@@ -12,16 +12,11 @@ import SwiftyJSON
 import RxSwift
 import Disk
 
-protocol URLConstructible {
-    
-    static func constructURL(baseUrl: URLComponents, construct: (_ constructedUrl: URLComponents) -> URL?) -> URL?
-}
-
 final class Webservice {
 
     static let imagesBaseUrl = URLComponents(string: "https://image.tmdb.org/t/p/w500/")!
 
-    // MARK: - Private lazys
+    // MARK: - Private 
     private let popularMoviesCacheFolder = "popularMovies"
     private lazy var baseUrl: URLComponents = {
         var url = URLComponents(string: "https://api.themoviedb.org/3/")!
@@ -34,33 +29,34 @@ final class Webservice {
 
     // MARK: -
 
-    func loadPopular(page: UInt = 1, completion: @escaping (_ popular: Popular) -> Void) {
+    func loadPopular(page: UInt = 1, completion: @escaping (_ popular: Popular, _ genres: [Genre]) -> Void) {
         if let movies = loadCachedMovies(for: page) {
             let popular = Popular(page: page)
-            completion(popular)
             popular.movies = movies
-            for movie in movies {
-                popular.moviesPublishSubject.on(.next(movie))
-            }
-            popular.moviesPublishSubject.on(.completed)
+            self.loadGenres(completion: { genres in
+                completion(popular, genres)
+            })
             return
         }
 
-        let url = Popular.constructURL(baseUrl: self.baseUrl) {
-            var url = $0
-            let params = [
-                URLQueryItem(name: "sort_by", value: "popularity.desc"),
-                URLQueryItem(name: "page", value: "\(page)")
-            ]
-            url.queryItems?.append(contentsOf: params)
-            return url.url!
-        }
-        let resource = Resource<Popular>(url: url!)
+        var url = self.baseUrl
+        let params = [
+            URLQueryItem(name: "sort_by", value: "popularity.desc"),
+            URLQueryItem(name: "page", value: "\(page)")
+        ]
+        url.queryItems?.append(contentsOf: params)
+        url.path.append(contentsOf: "movie/popular")
+        let resource = Resource<Popular>(url: url.url!)
+        
         URLSession.shared.load(resource, completion: { result in
             switch result {
-            case .success(let popular, let json):
-                self.loadMovies(popular: popular, json: json)
-                completion(popular)
+            case .success(let popular):
+                self.loadGenres(completion: { genres in
+                    completion(popular, genres)
+                })
+                try? Disk.save(popular.movies,
+                               to: .caches,
+                               as: "\(self.popularMoviesCacheFolder)/\(popular.page).json")
             case .error(let error):
                 print(error)
 
@@ -68,53 +64,59 @@ final class Webservice {
         })
     }
 
-    func search(query: String, completion: @escaping (_ movies: [Movie]) -> Void) {
+    func loadMovieDetails(movie: Movie, completion: @escaping (_ detailedMovie: Movie) -> Void) {
+        var url = self.baseUrl
+        url.path.append(contentsOf: "movie/\(movie.id!)")
+        let resource = Resource<Movie>(url: url.url!)
+
+        URLSession.shared.load(resource, completion: { result in
+            switch result {
+            case .success(let detailedMovie):
+                completion(detailedMovie)
+            case .error(let error):
+                print(error)
+            }
+        })
+    }
+
+    func search(query: String, completion: @escaping (_ movies: [Movie], _ genres: [Genre]) -> Void) {
         var url = baseUrl
         url.path.append(contentsOf: "search/movie")
         url.queryItems?.append(contentsOf: [URLQueryItem(name: "query", value: query)])
-
         let resource = Resource<[Movie]>(url: url.url!)
+
         URLSession.shared.load(resource, completion: { result in
             switch result {
-            case .success(let movies, _):
-                completion(movies)
+            case .success(let movies):
+                self.loadGenres(completion: { genres in
+                    completion(movies, genres)
+                })
             case .error(let error):
                 print(error)
             }
         })
     }
 
+
     func deleteCache()  {
-       try? Disk.remove(popularMoviesCacheFolder, from: .caches)
+        try? Disk.remove(popularMoviesCacheFolder, from: .caches)
     }
 
     // MARK: - Private
-    
-    private func loadMovies(popular: Popular, json: JSON) {
-        let ids = json.dictionaryValue["results"]?.arrayValue.map { $0.dictionaryValue["id"]?.uIntValue } ?? []
-        for id in ids {
-            let url = Movie.constructURL(baseUrl: self.baseUrl) {
-                var url = $0
-                url.path.append(contentsOf: "\(id!)")
-                return url.url
+
+    private func loadGenres(completion: @escaping (_ genres: [Genre]) -> Void) {
+        var url = baseUrl
+        url.path.append(contentsOf: "genre/movie/list")
+        let resource = Resource<[Genre]>(url: url.url!)
+
+        URLSession.shared.load(resource, completion: { result in
+            switch result {
+            case .success(let genres):
+                completion(genres)
+            case .error(let error):
+                print(error)
             }
-            let resource = Resource<Movie>(url: url!)
-            URLSession.shared.load(resource, completion: { result in
-                switch result {
-                case .success(let movie, _):
-                    popular.moviesPublishSubject.on(.next(movie))
-                    popular.movies.append(movie)
-                    if movie.id == ids.last {
-                        try? Disk.save(popular.movies,
-                                       to: .caches,
-                                       as: "\(self.popularMoviesCacheFolder)/\(popular.page).json")
-                        popular.moviesPublishSubject.on(.completed)
-                    }
-                case .error(let error):
-                    popular.moviesPublishSubject.on(.error(error))
-                }
-            })
-        }
+        })
     }
 
     private func loadCachedMovies(for page: UInt) -> [Movie]? {

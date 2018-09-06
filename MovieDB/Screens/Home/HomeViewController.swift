@@ -43,7 +43,8 @@ class HomeViewController: UIViewController, BindableType {
         navigationItem.searchController = searchController
 
         searchController.searchBar.rx.value
-            .throttle(1, scheduler: MainScheduler.instance)
+            .skip(1)
+            .throttle(0.5, scheduler: MainScheduler.instance)
             .distinctUntilChanged()
             .subscribe(onNext: { text in
                 if text?.count == 0 {
@@ -82,7 +83,7 @@ class HomeViewController: UIViewController, BindableType {
             .bind(to: collectionView.rx.items(cellIdentifier: nibId, cellType: cellType)) { (_, movie, cell) in
                 cell.poster.kf.setImage(with: movie.posterUrl)
                 cell.title.text = movie.title
-                cell.genres.text = movie.genres
+                cell.genres.text = movie.genresString
                 cell.score.text = "Popularity score: " + movie.popularity
                 cell.year.text = "Year: " + movie.releaseYear
             }

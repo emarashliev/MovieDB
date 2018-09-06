@@ -34,7 +34,7 @@ extension Resource where T: JSONDataLoadable {
     init(url: URL) {
         self.url = url
         self.parseResult = { data in
-            return .success(T.load(from: data), JSON(data))
+            return .success(T.load(from: data))
         }
     }
 }
@@ -60,17 +60,26 @@ extension URLSession {
     }
 }
 
-extension Array: JSONDataLoadable where Element == Movie {
+extension Array: JSONDataLoadable where Element: JSONDataLoadable {
     static func load(from data: Data) -> Array<Element> {
         let json = JSON(data)
-        var movies = [Movie]()
-        for m in json["results"].arrayValue {
-            if let d = try? m.rawData() {
-                let movie = Movie.load(from: d)
-                movies.append(movie)
+        var elements = [Element]()
+
+        var key: String? = nil
+        if Element.self == Movie.self {
+            key = "results"
+        } else if Element.self == Genre.self {
+            key = "genres"
+        }
+
+        for e in json[key!].arrayValue {
+            if let d = try? e.rawData() {
+                let element = Element.load(from: d)
+                elements.append(element)
             }
         }
-        return movies
+        return elements
     }
 }
+
 

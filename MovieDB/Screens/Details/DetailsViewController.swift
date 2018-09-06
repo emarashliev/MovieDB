@@ -7,6 +7,8 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 import Kingfisher
 
 class DetailsViewController: UIViewController, BindableType {
@@ -22,23 +24,14 @@ class DetailsViewController: UIViewController, BindableType {
     @IBOutlet var link: UILabel!
     
     var viewModel: DetailsViewModel!
+    private let disposeBag = DisposeBag()
 
     // MARK: - View lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = viewModel.movie.title
-        image.kf.setImage(with: viewModel.movie.posterUrl)
-        genres.text = viewModel.movie.genres
-        desc.text = viewModel.movie.overview
-        score.text = viewModel.movie.popularity
-        year.text = viewModel.movie.releaseYear
-        runtime.text = viewModel.movie.runtime
-        revenue.text = viewModel.movie.revenue
-        language.text = viewModel.movie.language
-        link.attributedText = viewModel.movie.homepage
+        viewModel.fetchDetails()
     }
-
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -48,14 +41,28 @@ class DetailsViewController: UIViewController, BindableType {
     // MARK: - Button actions
 
     @IBAction func linkTaped(_ sender: Any) {
-        if let url = viewModel.movie.homepageUrl {
+        if let url = viewModel.movie.value.homepageUrl {
             UIApplication.shared.open(url)
         }
     }
-
+    
     // MARK: - BindableType
 
     func bindViewModel() {
-
+        viewModel.movie
+            .observeOn(MainScheduler.instance)
+            .bind { movie in
+                self.title = movie.title
+                self.image.kf.setImage(with: movie.posterUrl)
+                self.genres.text = movie.genresString
+                self.desc.text = movie.overview
+                self.score.text = movie.popularity
+                self.year.text = movie.releaseYear
+                self.runtime.text = movie.runtime
+                self.revenue.text = movie.revenue
+                self.language.text = movie.language
+                self.link.attributedText = movie.homepage
+            }
+            .disposed(by: disposeBag)
     }
 }
