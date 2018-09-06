@@ -17,6 +17,9 @@ class HomeViewController: UIViewController, BindableType {
 
     var viewModel: HomeViewModel!
     private let disposeBag = DisposeBag()
+    private var executedOnce = false
+
+    // MARK: - View lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,6 +36,8 @@ class HomeViewController: UIViewController, BindableType {
         super.viewWillAppear(animated)
 
         navigationController?.navigationBar.prefersLargeTitles = true
+
+        if executedOnce { return }
         let searchController = UISearchController(searchResultsController: nil)
         searchController.obscuresBackgroundDuringPresentation = false
         navigationItem.searchController = searchController
@@ -49,12 +54,27 @@ class HomeViewController: UIViewController, BindableType {
             } )
             .disposed(by: disposeBag)
 
-        searchController.searchBar.rx.textDidEndEditing.subscribe(onNext: { (_) in
+        searchController.searchBar.rx.textDidEndEditing.subscribe(onNext: {
             self.viewModel.reset()
         })
             .disposed(by: disposeBag)
+        executedOnce = true
     }
-    
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationItem.searchController?.isActive = false
+    }
+
+    // MARK: - Button actions
+
+    @objc
+    func refreshPressed() {
+        viewModel.refresh()
+    }
+
+    // MARK: - BindableType
+
     func bindViewModel() {
         let nibId = HomeCollectionViewCell.nibIdentifier
         let cellType = HomeCollectionViewCell.self
@@ -63,17 +83,20 @@ class HomeViewController: UIViewController, BindableType {
                 cell.poster.kf.setImage(with: movie.posterUrl)
                 cell.title.text = movie.title
                 cell.genres.text = movie.genres
-                cell.score.text = movie.popularity
-                cell.year.text = movie.releaseYear
+                cell.score.text = "Popularity score: " + movie.popularity
+                cell.year.text = "Year: " + movie.releaseYear
             }
             .disposed(by: disposeBag)
-    }
 
-    @objc
-    func refreshPressed() {
-        viewModel.refresh()
+        collectionView.rx.itemSelected
+            .subscribe(onNext: { indexPath in
+                self.viewModel.showDetails(for: indexPath.item)
+            } )
+            .disposed(by: disposeBag)
     }
 }
+
+// MARK: - Collection View Delegate Flow Layout
 
 extension HomeViewController: UICollectionViewDelegateFlowLayout {
 
@@ -92,6 +115,8 @@ extension HomeViewController: UICollectionViewDelegateFlowLayout {
         return CGSize(width: itemSize, height: itemSize * 1.5)
     }
 }
+
+// MARK: - Collection View Delegate
 
 extension HomeViewController: UICollectionViewDelegate {
 

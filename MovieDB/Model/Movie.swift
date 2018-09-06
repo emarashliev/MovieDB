@@ -54,7 +54,7 @@ extension Movie: Decodable {
         popularity = try? values.decode(Double.self, forKey: .popularity)
         posterPath = try? values.decode(String.self, forKey: .posterPath)
         releaseDate = try? values.decode(String.self, forKey: .releaseDate)
-        overview = try? values.decode(String.self, forKey: .releaseDate)
+        overview = try? values.decode(String.self, forKey: .overview)
         runtime = try? values.decode(UInt.self, forKey: .runtime)
         revenue = try? values.decode(UInt.self, forKey: .revenue)
         originalLanguage = try? values.decode(String.self, forKey: .originalLanguage)

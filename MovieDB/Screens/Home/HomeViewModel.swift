@@ -14,19 +14,25 @@ import RxCoordinator
 final class HomeViewModel {
     
     var movies = BehaviorRelay<[MovieDataTransformHelper]>(value: [])
+
+    // MARK: - Private
     private var lastLoadedPage: UInt
     private var inProgress = false
-    
+
     private let coordinator: AnyCoordinator<MainRoute>
     private let webservice = Webservice()
     private let disposeBag = DisposeBag()
-    
+
+    // MARK: - Init
+
     init(coodinator: AnyCoordinator<MainRoute>) {
         self.coordinator = coodinator
         lastLoadedPage = 0
         fetchNextPage()
     }
-    
+
+    // MARK: - Actions
+
     func fetchNextPage()  {
         guard !inProgress else {
             return
@@ -62,6 +68,11 @@ final class HomeViewModel {
             })
             self.movies.accept(movies.map { MovieDataTransformHelper(movie: $0) })
         }
+    }
+
+    func showDetails(for item: Int) {
+        let movie = movies.value[item]
+        coordinator.transition(to: .details(movie))
     }
 
     func reset() {

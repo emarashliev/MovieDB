@@ -18,7 +18,7 @@ final class MovieDataTransformHelper {
     }
 
     var popularity: String {
-        return String(format: "%.3f", movie.popularity!) + " popularity score"
+        return String(format: "%.3f", movie.popularity!)
     }
 
     var posterUrl: URL? {
@@ -33,7 +33,7 @@ final class MovieDataTransformHelper {
     var releaseYear: String {
         if let dateString = movie.releaseDate,
             let date = MovieDataTransformHelper.parseFormatter.date(from: dateString) {
-            return MovieDataTransformHelper.yearFormatter.string(from: date) + " year"
+            return MovieDataTransformHelper.yearFormatter.string(from: date)
         }
         return "N/A"
     }
@@ -48,14 +48,15 @@ final class MovieDataTransformHelper {
 
     var runtime: String {
         if let runtime = movie.runtime {
-            return String(runtime)
+            return String(runtime) + " min."
         }
         return "N/A"
     }
 
     var revenue: String {
-        if let revenue = movie.revenue {
-            return String(revenue)
+        if let revenue = movie.revenue,
+            let r = MovieDataTransformHelper.currencyFormatter.string(from: revenue as NSNumber) {
+            return r
         }
         return "N/A"
     }
@@ -64,8 +65,23 @@ final class MovieDataTransformHelper {
         return movie.originalLanguage ?? "N/A"
     }
 
-    var homepage: String {
-        return movie.homepage ?? "N/A"
+    var homepageUrl: URL? {
+        if let text = movie.homepage {
+            return URL(string: text)
+        } else {
+            return nil
+        }
+    }
+
+    var homepage: NSAttributedString {
+        var attrString: NSMutableAttributedString? = nil
+        if let url = homepageUrl {
+            attrString = NSMutableAttributedString(string: url.absoluteString)
+            attrString!.addAttributes([.link : url], range:  NSRange(location: 0, length: url.absoluteString.count))
+        } else {
+            attrString = NSMutableAttributedString(string: "N/A")
+        }
+        return attrString!
     }
 
     private static var yearFormatter: DateFormatter {
@@ -77,6 +93,13 @@ final class MovieDataTransformHelper {
     private static var parseFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "YYYY-MM-DD"
+        return formatter
+    }
+
+    private static var currencyFormatter: NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.numberStyle = .currency
         return formatter
     }
 

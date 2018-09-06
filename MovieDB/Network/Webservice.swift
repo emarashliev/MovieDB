@@ -21,6 +21,7 @@ final class Webservice {
 
     static let imagesBaseUrl = URLComponents(string: "https://image.tmdb.org/t/p/w500/")!
 
+    // MARK: - Private lazys
     private let popularMoviesCacheFolder = "popularMovies"
     private lazy var baseUrl: URLComponents = {
         var url = URLComponents(string: "https://api.themoviedb.org/3/")!
@@ -30,6 +31,8 @@ final class Webservice {
         ]
         return url
     }()
+
+    // MARK: -
 
     func loadPopular(page: UInt = 1, completion: @escaping (_ popular: Popular) -> Void) {
         if let movies = loadCachedMovies(for: page) {
@@ -85,6 +88,8 @@ final class Webservice {
        try? Disk.remove(popularMoviesCacheFolder, from: .caches)
     }
 
+    // MARK: - Private
+    
     private func loadMovies(popular: Popular, json: JSON) {
         let ids = json.dictionaryValue["results"]?.arrayValue.map { $0.dictionaryValue["id"]?.uIntValue } ?? []
         for id in ids {
